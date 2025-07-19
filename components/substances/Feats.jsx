@@ -1,11 +1,11 @@
 import { createSignal, createEffect, For, Switch, Match, batch } from 'solid-js';
 import * as i18n from '@solid-primitives/i18n';
 
-import { Toggle, Button, Select, ErrorWrapper, FeatureTitle, TextArea } from '../../../../components';
-import { useAppState, useAppLocale, useAppAlert } from '../../../../context';
-import { updateCharacterFeatRequest } from '../../../../requests/updateCharacterFeatRequest';
+import { Toggle, Button, Select, ErrorWrapper, FeatureTitle, TextArea } from '../../components';
+import { useAppState, useAppLocale, useAppAlert } from '../../context';
+import { updateCharacterFeatRequest } from '../../requests/updateCharacterFeatRequest';
 
-export const DaggerheartFeats = (props) => {
+export const Feats = (props) => {
   const character = () => props.character;
 
   const [lastActiveCharacterId, setLastActiveCharacterId] = createSignal(undefined);
@@ -39,8 +39,19 @@ export const DaggerheartFeats = (props) => {
   }
 
   const updateFeatureValue = (feature, value) => {
-    setFeatValues({ ...featValues(), [feature.slug]: value })
+    setFeatValues({ ...featValues(), [feature.slug]: value });
     refreshFeatures(feature.id, { value: value }, false);
+  }
+
+  const updateMultiFeatureValue = (feature, value) => {
+    const currentValues = featValues()[feature.slug];
+    if (currentValues) {
+      const newValue = currentValues.includes(value) ? currentValues.filter((item) => item !== value) : currentValues.concat([value]);
+      setFeatValues({ ...featValues(), [feature.slug]: newValue });
+    } else {
+      setFeatValues({ ...featValues(), [feature.slug]: [value] });
+    }
+    refreshFeatures(feature.id, { value: featValues()[feature.slug] }, false);
   }
 
   const refreshFeatures = async (featureId, payload, refresh = true) => {
@@ -90,12 +101,21 @@ export const DaggerheartFeats = (props) => {
                   </Button>
                 </div>
               </Match>
-              <Match when={feature.kind === 'static_list'}>
+              <Match when={feature.kind === 'static_list' || feature.kind === 'one_from_list'}>
                 <Select
                   containerClassList="w-full mt-2"
                   items={Object.entries(feature.options).reduce((acc, [key, value]) => { acc[key] = value[locale()]; return acc; }, {})}
                   selectedValue={featValues()[feature.slug]}
                   onSelect={(option) => updateFeatureValue(feature, option)}
+                />
+              </Match>
+              <Match when={feature.kind === 'many_from_list'}>
+                <Select
+                  multi
+                  containerClassList="w-full mt-2"
+                  items={Object.entries(feature.options).reduce((acc, [key, value]) => { acc[key] = value[locale()]; return acc; }, {})}
+                  selectedValues={featValues()[feature.slug] || []}
+                  onSelect={(option) => updateMultiFeatureValue(feature, option)}
                 />
               </Match>
             </Switch>
