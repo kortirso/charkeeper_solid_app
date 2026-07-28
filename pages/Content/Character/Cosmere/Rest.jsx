@@ -103,7 +103,7 @@ export const CosmereRest = (props) => {
           </Show>
           <Show when={recovery()}>
             <p class="text-sm mt-4">{localize(TRANSLATION, locale()).lastRecovery} - {recovery()}</p>
-          </Show> 
+          </Show>
           <Button default textable classList="mt-4" onClick={restCharacter}>{localize(TRANSLATION, locale()).rest}</Button>
         </div>
       </GuideWrapper>
